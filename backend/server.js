@@ -80,6 +80,8 @@ app.get("/api/questions", async (req, res) => {
     const response = await fetch(`${BASE_URL}?sheet=Questions`);
     let data = await response.json();
 
+    const sanitized = data.map(({ Answer, ...rest }) => rest);
+
     // Shuffle the questions
     data = data
       .map((q) => ({ value: q, sort: Math.random() }))
