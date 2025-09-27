@@ -121,6 +121,46 @@ app.post("/api/responses", async (req, res) => {
 });
 
 
+app.post("/api/submit", async (req, res) => {
+  const { StudentName, StudentEmail, Answers, Timestamp, Switches } = req.body;
+
+  try {
+    const qRes = await fetch(`${BASE_URL}?sheet=Questions`);
+    const questions = await qRes.json();
+
+    let score = 0;
+    questions.forEach((q) => {
+      if (Answers[q.ID] === q.Answer) {
+        score += parseInt(q.Points || 1);
+      }
+    });
+
+    const response = await fetch(`${BASE_URL}?sheet=Responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data: [
+          {
+            Timestamp,
+            StudentName,
+            StudentEmail,
+            AnswersJson: JSON.stringify(Answers),
+            Score: score,
+            Switches,
+          },
+        ],
+      }),
+    });
+
+    const saved = await response.json();
+    res.json({ success: true, score, saved });
+  } catch (err) {
+    console.error("❌ Failed to submit:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 // GET all responses with correct answers included
 app.get("/api/responses", async (req, res) => {
   try {
